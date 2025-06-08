@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflexCore.CLI", "ReflexCore.CLI\ReflexCore.CLI.csproj", "{CAE25D29-F592-4EE9-BD5C-185C05B47136}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflexCore", "..\..\src\ReflexCore\ReflexCore\ReflexCore.csproj", "{BDB0AD4C-074C-4556-A629-62E9C8F99841}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAE25D29-F592-4EE9-BD5C-185C05B47136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAE25D29-F592-4EE9-BD5C-185C05B47136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAE25D29-F592-4EE9-BD5C-185C05B47136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAE25D29-F592-4EE9-BD5C-185C05B47136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDB0AD4C-074C-4556-A629-62E9C8F99841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB0AD4C-074C-4556-A629-62E9C8F99841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB0AD4C-074C-4556-A629-62E9C8F99841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB0AD4C-074C-4556-A629-62E9C8F99841}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

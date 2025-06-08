@@ -8,15 +8,23 @@ using System.Threading.Tasks;
 namespace ReflexCore.Domain.ValueObjects
 {
     /// <summary>
-    /// Represents an emotional state with intensity.
+    /// Represents a snapshot of a single core emotion with intensity.
+    /// Immutable.
     /// </summary>
-    public record Emotion(EmotionType Type, float Intensity)
+    public record Emotion(
+        EmotionType Type,
+        float Intensity, // 0-1
+        DateTimeOffset Timestamp
+    )
     {
-        public static Emotion Create(EmotionType type, float intensity)
+        public static Emotion Create(EmotionType type, float intensity, DateTimeOffset? timestamp = null)
         {
             if (intensity < 0f || intensity > 1f)
-                throw new ArgumentOutOfRangeException(nameof(intensity), "Intensity must be in [0,1].");
-            return new Emotion(type, intensity);
+                throw new ArgumentOutOfRangeException(nameof(intensity), "Emotion intensity must be between 0 and 1.");
+            return new Emotion(type, intensity, timestamp ?? DateTimeOffset.UtcNow);
         }
+
+        public override string ToString()
+            => $"[{Type}]({Intensity:0.00}) @ {Timestamp:u}";
     }
 }

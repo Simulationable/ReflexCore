@@ -8,18 +8,24 @@ using System.Threading.Tasks;
 
 namespace ReflexCore.Application.Output
 {
-    /// <summary>
-    /// Layer 6: Generate action intent for output.
-    /// </summary>
-    public class ActionGenerator(ILogger logger)
+    public class ActionGenerator(ILogger logger, NotificationFormatter notificationFormatter)
     {
-        private readonly ILogger _logger = logger;
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly NotificationFormatter _notificationFormatter = notificationFormatter ?? throw new ArgumentNullException(nameof(notificationFormatter));
 
         public ActionIntent Generate(RuleResult ruleResult)
         {
             ArgumentNullException.ThrowIfNull(ruleResult);
             _logger.Information("Generating action intent: {Action}, Confidence {Confidence}", ruleResult.Action, ruleResult.Confidence);
-            return new ActionIntent(ruleResult.Action, ruleResult.Confidence, ruleResult.Explanation);
+
+            // Format explanation or action for notification
+            var notification = _notificationFormatter.FormatForDisplay(ruleResult.Explanation);
+
+            // Log formatted notification (optional)
+            _logger.Information("Notification: {Notification}", notification);
+
+            // Return intent as usual
+            return ActionIntent.Create(ruleResult.Action, ruleResult.Confidence, ruleResult.Explanation);
         }
     }
 }

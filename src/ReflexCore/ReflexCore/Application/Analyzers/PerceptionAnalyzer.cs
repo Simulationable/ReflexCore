@@ -13,7 +13,7 @@ namespace ReflexCore.Application.Analyzers
     /// </summary>
     public class PerceptionAnalyzer(ILogger logger)
     {
-        private readonly ILogger _logger = logger;
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         public string Analyze(ReflexContext context)
         {
@@ -27,7 +27,6 @@ namespace ReflexCore.Application.Analyzers
 
             _logger.Information("Analyzing perception for situation: {SituationId}", context.SituationId);
 
-            // Robust pattern matching; safe for SAST, extendable for production
             var situation = context.SituationId.Trim();
 
             if (situation.Contains("crisis", StringComparison.OrdinalIgnoreCase))
@@ -35,10 +34,9 @@ namespace ReflexCore.Application.Analyzers
             if (situation.Contains("normal", StringComparison.OrdinalIgnoreCase))
                 return "NormalSituation";
 
-            // Can add more cases or ML plugin here
+            // TODO: Extend with ML or plugin detection here
 
             return "Unknown";
         }
-
     }
 }

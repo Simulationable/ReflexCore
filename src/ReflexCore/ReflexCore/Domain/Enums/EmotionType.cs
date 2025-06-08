@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 
 namespace ReflexCore.Domain.Enums
 {
+    /// <summary>
+    /// Categorical emotion types based on primary affective dimensions.
+    /// </summary>
     public enum EmotionType
     {
-        Neutral, 
-        Joy, 
-        Trust, 
-        Fear, 
-        Surprise, 
-        Sadness, 
-        Disgust, 
-        Anger, 
-        Anticipation, 
+        Joy,
+        Trust,
+        Fear,
+        Surprise,
+        Sadness,
+        Disgust,
+        Anger,
+        Anticipation,
+        Neutral,
         Despair
     }
 }

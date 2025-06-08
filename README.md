@@ -23,6 +23,19 @@ Whether powering mental health companions, AI monitors, moderators, or research 
 
 ---
 
+## 🧪 Run CLI Evaluation (Demo)
+
+You can run the CLI demo by evaluating a reflex profile:
+
+```bash
+dotnet run --project ReflexCore.CLI -- evaluate --profile-id demo01 --situation "approaching-stranger"
+```
+
+This will process a simulated situation and return the AI's action intent (e.g. OfferSupport, AvoidConflict, etc).
+Make sure dependencies are registered via CliServiceProvider and traits/emotion default config is loaded properly.
+
+---
+
 ## 🧠 Cognitive Reflex Architecture
 
 ReflexCore is structured as **7 human-inspired layers**:

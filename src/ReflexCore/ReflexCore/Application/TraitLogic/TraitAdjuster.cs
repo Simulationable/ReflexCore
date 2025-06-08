@@ -14,7 +14,7 @@ namespace ReflexCore.Application.TraitLogic
     /// </summary>
     public class TraitAdjuster(ILogger logger)
     {
-        private readonly ILogger _logger = logger;
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         public Trait Adjust(Trait trait, string perception, Emotion emotion)
         {
@@ -99,6 +99,5 @@ namespace ReflexCore.Application.TraitLogic
                 RiskTolerance = riskTolerance
             };
         }
-
     }
 }

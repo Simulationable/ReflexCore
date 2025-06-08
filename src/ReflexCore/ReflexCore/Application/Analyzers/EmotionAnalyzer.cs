@@ -10,30 +10,33 @@ using System.Threading.Tasks;
 namespace ReflexCore.Application.Analyzers
 {
     /// <summary>
-    /// Layer 2: Analyze or infer emotion.
+    /// Layer 2: Analyze or infer emotion, raise alert for high-risk, allow plugin, fully production.
     /// </summary>
-    public class EmotionAnalyzer(ILogger logger)
+    public class EmotionAnalyzer(ILogger logger, IEmotionAlertHandler? alertHandler = null, IEmotionAnalyzerPlugin? plugin = null)
     {
-        private readonly ILogger _logger = logger;
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IEmotionAlertHandler? _alertHandler = alertHandler;
+        private readonly IEmotionAnalyzerPlugin? _plugin = plugin;
 
+        /// <summary>
+        /// Analyze emotion, normalize, trigger alert and plugin if needed.
+        /// </summary>
         public Emotion Analyze(Emotion input)
         {
             ArgumentNullException.ThrowIfNull(input);
 
-            // Logging with audit trace
             _logger.Information("Analyzing Emotion: {Type} (Intensity: {Intensity})", input.Type, input.Intensity);
 
-            // Basic normalization
             var clampedIntensity = Math.Clamp(input.Intensity, 0f, 1f);
 
-            // Pattern: escalate if despair or anger is too high
+            // High-risk: Escalate
             if ((input.Type == EmotionType.Despair || input.Type == EmotionType.Anger) && clampedIntensity > 0.7f)
             {
                 _logger.Warning("High-risk emotion detected: {Type} (Intensity: {Intensity})", input.Type, clampedIntensity);
-                // Optionally, trigger alert/notify here (via event, hook, etc.)
+                _alertHandler?.OnHighRiskEmotion(input.Type, clampedIntensity);
             }
 
-            // Transform: flatten low-intensity negative emotions to Neutral
+            // Normalize low negative to Neutral
             if (clampedIntensity < 0.2f && (
                 input.Type == EmotionType.Sadness ||
                 input.Type == EmotionType.Despair ||
@@ -42,14 +45,39 @@ namespace ReflexCore.Application.Analyzers
             ))
             {
                 _logger.Information("Low-intensity negative emotion normalized to Neutral.");
-                return new Emotion(EmotionType.Neutral, 0f);
+                var neutral = Emotion.Create(EmotionType.Neutral, 0f);
+                _plugin?.OnEmotionNormalized(input, neutral);
+                return neutral;
             }
 
-            // Plugin point: External/AI override (future)
-            // if (_plugin != null) return _plugin.Analyze(input);
+            // Plugin override (if result != null, plugin is in control)
+            if (_plugin != null)
+            {
+                var pluginResult = _plugin.Analyze(input);
+                if (pluginResult != null)
+                {
+                    _logger.Information("Emotion analysis overridden by plugin.");
+                    return pluginResult;
+                }
+            }
 
-            // Return processed emotion
-            return new Emotion(input.Type, clampedIntensity);
+            var result = Emotion.Create(input.Type, clampedIntensity);
+            _plugin?.OnEmotionAnalyzed(input, result);
+            return result;
         }
+    }
+
+    // Production-grade alert/event interface
+    public interface IEmotionAlertHandler
+    {
+        void OnHighRiskEmotion(EmotionType type, float intensity);
+    }
+
+    // Plugin interface (optional, can do ML/AI extension)
+    public interface IEmotionAnalyzerPlugin
+    {
+        Emotion? Analyze(Emotion input);
+        void OnEmotionAnalyzed(Emotion input, Emotion output);
+        void OnEmotionNormalized(Emotion input, Emotion output);
     }
 }

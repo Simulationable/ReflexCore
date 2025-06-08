@@ -12,9 +12,16 @@ namespace ReflexCore.Application.RuleEngine
     /// <summary>
     /// Layer 4 & 5: Decide action based on rules.
     /// </summary>
-    public class ReflexRuleEngine(ILogger logger)
+    public class ReflexRuleEngine(
+        ILogger logger,
+        RuleSetProvider ruleSetProvider,
+        RuleValidator ruleValidator,
+        RuleResultMapper ruleResultMapper)
     {
-        private readonly ILogger _logger = logger;
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly RuleSetProvider _ruleSetProvider = ruleSetProvider ?? throw new ArgumentNullException(nameof(ruleSetProvider));
+        private readonly RuleValidator _ruleValidator = ruleValidator ?? throw new ArgumentNullException(nameof(ruleValidator));
+        private readonly RuleResultMapper _ruleResultMapper = ruleResultMapper ?? throw new ArgumentNullException(nameof(ruleResultMapper));
 
         public RuleResult Evaluate(string perception, Emotion emotion, Trait traits)
         {
@@ -30,44 +37,43 @@ namespace ReflexCore.Application.RuleEngine
                 traits.Empathy
             );
 
-            // Production-safe, testable, ready for extension
-            if (string.Equals(perception, "CrisisSituation", StringComparison.OrdinalIgnoreCase)
-                && emotion.Intensity > 0.7f
-                && traits.Empathy > 0.5f)
+            var rules = _ruleSetProvider.GetRules(perception);
+            var results = new List<RuleResult>();
+            foreach (var rule in rules)
             {
-                return RuleResult.Create(
-                    ReflexAction.Escalate,
-                    0.95f,
-                    "High intensity crisis with high empathy: escalate."
-                );
+                var result = rule.Evaluate(perception, emotion, traits);
+                if (_ruleValidator.IsValid(rule, perception, emotion, traits))  
+                    results.Add(result);
             }
 
-            if (emotion.Type == EmotionType.Despair)
+            var mapped = _ruleResultMapper.Map(results);
+
+            var rawResults = rules.Select(rule => rule.Evaluate(perception, emotion, traits)).ToList();
+
+            var mappedResult = _ruleResultMapper.Map(rawResults);
+
+            _logger.Information(
+                "Rule evaluation complete. Action: {Action}, Confidence: {Confidence}, Explanation: {Explanation}",
+                mappedResult.Action, mappedResult.Confidence, mappedResult.Explanation);
+
+            return mappedResult;
+        }
+
+        public List<RuleResult> EvaluateAll(IEnumerable<(string perception, Emotion emotion, Trait traits)> batch)
+        {
+            var results = new List<RuleResult>();
+            foreach (var item in batch)
             {
-                return RuleResult.Create(
-                    ReflexAction.StayWithUser,
-                    0.9f,
-                    "Detected despair: stay with user."
-                );
+                try
+                {
+                    results.Add(Evaluate(item.perception, item.emotion, item.traits));
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Rule evaluation failed for perception: {Perception}", item.perception);
+                }
             }
-
-            if (string.Equals(perception, "NormalSituation", StringComparison.OrdinalIgnoreCase))
-            {
-                return RuleResult.Create(
-                    ReflexAction.OfferSupport,
-                    0.7f,
-                    "Normal situation, offering support."
-                );
-            }
-
-            // Plug-in/extension point here (custom rule, ML, config, etc.)
-
-            _logger.Debug("No strong signal found, defaulting to log only.");
-            return RuleResult.Create(
-                ReflexAction.LogOnly,
-                0.5f,
-                "No strong signal: log only."
-            );
+            return results;
         }
     }
 }
